@@ -7,8 +7,9 @@ import SptForm from './pages/SptForm';
 import SptPrint from './pages/SptPrint';
 
 // Import halaman Auth yang baru kita buat
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Login from './security/LoginPage';
+import Register from './security/RegisterPage';
+import './App.css';
 
 // Fungsi untuk mengecek apakah user sudah login
 const ProtectedRoute = ({ children }) => {
