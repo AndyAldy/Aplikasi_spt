@@ -3,28 +3,32 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
-export default function Register() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({ nama_lengkap: '', username: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
-  
-  const [captchaText, setCaptchaText] = useState('');
-  const [captchaInput, setCaptchaInput] = useState('');
-
   const generateCaptcha = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     let captcha = "";
     for(let i = 0; i < 5; i++) {
       captcha += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setCaptchaText(captcha);
+    return captcha;
+  };
+
+export default function Register() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ nama_lengkap: '', username: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const [captchaText, setCaptchaText] = useState(() => generateCaptcha());
+  const [captchaInput, setCaptchaInput] = useState('');
+
+const refreshCaptcha = () => {
+    setCaptchaText(generateCaptcha());
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (captchaInput !== captchaText) {
       alert("Captcha salah!");
-      generateCaptcha();
+      refreshCaptcha();
       setCaptchaInput('');
       return;
     }

@@ -3,15 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
-export default function Login() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({ username: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
-  
-  // State untuk Captcha
-  const [captchaText, setCaptchaText] = useState('');
-  const [captchaInput, setCaptchaInput] = useState('');
-
   // Fungsi generate huruf acak (tanpa angka)
   const generateCaptcha = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -19,14 +10,27 @@ export default function Login() {
     for(let i = 0; i < 5; i++) {
       captcha += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setCaptchaText(captcha);
+    return captcha;
+  };
+
+export default function Login() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // State untuk Captcha
+  const [captchaText, setCaptchaText] = useState(() => generateCaptcha());
+  const [captchaInput, setCaptchaInput] = useState('');
+
+const refreshCaptcha = () => {
+    setCaptchaText(generateCaptcha());
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (captchaInput !== captchaText) {
       alert("Captcha salah! Silakan coba lagi.");
-      generateCaptcha();
+      refreshCaptcha();
       setCaptchaInput('');
       return;
     }
