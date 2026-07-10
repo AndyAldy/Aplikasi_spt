@@ -224,6 +224,24 @@ app.post('/api/spt', async (req, res) => {
   }
 });
 
+// Menghapus data SPT berdasarkan ID
+app.delete('/api/spt/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Karena di database kamu sudah menggunakan ON DELETE CASCADE untuk tabel spt_pegawai,
+    // menghapus data di tabel 'spt' akan otomatis menghapus data relasinya juga!
+    const [result] = await pool.query('DELETE FROM spt WHERE id = ?', [id]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Data tidak ditemukan!' });
+    }
+    
+    res.json({ message: 'Data SPT berhasil dihapus!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Jalankan server pada port 8000
 app.listen(8000, () => {
   console.log('Backend Server berjalan di http://localhost:8000');

@@ -26,29 +26,6 @@ export default function SptForm() {
     { nama: '', nip: '', pangkat: '', jabatan: '' }
   ]);
 
-  useEffect(() => {
-    const fetchSptDetail = async () => {
-      if (id) {
-        try {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          setFormData({
-            nomor_surat: '000.1.2.3/1868/438.5.12/2026',
-            tanggal_surat: '2026-02-05',
-            dasar_penugasan: 'Nota Dinas Kepala Bidang PIAK Nomor: 400.12.4/434...',
-            tujuan_tugas: 'Melaksanakan Monitoring Tower',
-            tempat_tugas: 'Kecamatan Sidoarjo',
-          });
-          setPegawaiTugas([
-            { nama: "BAMBANG PURNOMO", nip: "19700311", pangkat: "Pembina", jabatan: "Kabid PIAK" }
-          ]);
-        } catch (error) {
-          console.error("Gagal mengambil data:", error);
-        }
-      }
-    };
-    fetchSptDetail();
-  }, [id]);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -71,8 +48,6 @@ export default function SptForm() {
     e.preventDefault();
     const payloadData = { ...formData, pegawai: pegawaiTugas };
     console.log("Data siap dikirim:", payloadData);
-    alert('SPT Berhasil Disimpan!');
-    navigate('/');
 try {
       const response = await axios.post('http://localhost:8000/api/spt', payloadData);
       alert(response.data.message);
