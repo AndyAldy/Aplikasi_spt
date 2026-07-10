@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 export default function SptForm() {
   const navigate = useNavigate();
-  const { id } = useParams(); // Jika ada ID di URL, berarti form ini dipakai untuk Edit
+  const { id } = useParams();
   
   // State untuk Data Utama Surat
   const [formData, setFormData] = useState({
