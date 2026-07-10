@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import SptList from './pages/SptList';
 import SptForm from './pages/SptForm';
 import SptPrint from './pages/SptPrint';
+import './App.css';
 
 function App() {
   return (
