@@ -22,6 +22,7 @@ export default function SptForm() {
 
   // Simulasi Ambil Data saat Mode Edit
   useEffect(() => {
+    const fetchSptDetail = async () => {
     if (id) {
       setFormData({
         nomor_surat: '000.1.2.3/1868/438.5.12/2026',
@@ -34,6 +35,8 @@ export default function SptForm() {
         { nama: "BAMBANG PURNOMO", nip: "19700311", pangkat: "Pembina", jabatan: "Kabid PIAK" }
       ]);
     }
+};
+fetchSptDetail();
   }, [id]);
 
   const handleChange = (e) => {
