@@ -5,8 +5,6 @@ import Navbar from './components/Navbar';
 import SptList from './pages/SptList';
 import SptForm from './pages/SptForm';
 import SptPrint from './pages/SptPrint';
-
-// Import halaman Auth yang baru kita buat
 import Login from './security/LoginPage';
 import Register from './security/RegisterPage';
 import './App.css';
