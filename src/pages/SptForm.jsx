@@ -13,6 +13,13 @@ export default function SptForm() {
     dasar_penugasan: '',
     tujuan_tugas: '',
     tempat_tugas: '',
+    tanggal_mulai: '',
+    tanggal_selesai: '',
+    kendaraan: 'Kendaraan Dinas', 
+    penandatangan_nama: 'Ainun Amalia, S.Sos.',
+    penandatangan_nip: '197505131993112001',
+    penandatangan_pangkat_gol: 'Pembina Utama Muda/ IVc',
+    penandatangan_jabatan: 'Asisten Pemerintahan'
   });
 
   const [pegawaiTugas, setPegawaiTugas] = useState([
@@ -124,7 +131,7 @@ try {
             </button>
           </div>
 
-          <h3 className="section-title" style={{ marginTop: '35px' }}>Detail Penugasan</h3>
+<h3 className="section-title" style={{ marginTop: '35px' }}>Detail Penugasan</h3>
           <div className="form-grid">
             <div className="form-group">
               <label>Tujuan Tugas</label>
@@ -134,6 +141,17 @@ try {
             <div className="form-group">
               <label>Tempat Tugas</label>
               <input type="text" className="form-control" name="tempat_tugas" value={formData.tempat_tugas} onChange={handleChange} placeholder="Contoh: Kecamatan Sidoarjo" required />
+            </div>
+
+            {/* TAMBAHKAN DUA KOTAK INPUT INI */}
+            <div className="form-group">
+              <label>Tanggal Mulai</label>
+              <input type="date" className="form-control" name="tanggal_mulai" value={formData.tanggal_mulai} onChange={handleChange} required />
+            </div>
+
+            <div className="form-group">
+              <label>Tanggal Selesai</label>
+              <input type="date" className="form-control" name="tanggal_selesai" value={formData.tanggal_selesai} onChange={handleChange} required />
             </div>
           </div>
 
