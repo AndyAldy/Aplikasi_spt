@@ -59,12 +59,20 @@ export default function SptForm() {
     setPegawaiTugas(pegawaiTugas.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const payloadData = { ...formData, pegawai: pegawaiTugas };
     console.log("Data siap dikirim:", payloadData);
     alert('SPT Berhasil Disimpan!');
-    navigate('/'); 
+    navigate('/');
+try {
+      const response = await axios.post('http://localhost:8000/api/spt', payloadData);
+      alert(response.data.message);
+      navigate('/');
+    } catch (error) {
+      // INI YANG AKAN MEMUNCULKAN PESAN "NOMOR SURAT SUDAH ADA" DARI BACKEND
+      alert(error.response?.data?.error || "Terjadi kesalahan saat menyimpan data");
+    }
   };
 
   return (
@@ -80,7 +88,7 @@ export default function SptForm() {
           <div className="form-grid">
             <div className="form-group">
               <label>Nomor Surat</label>
-              <input type="text" className="form-control" name="nomor_surat" value={formData.nomor_surat} onChange={handleChange} placeholder="Otomatis di-generate jika kosong" required />
+              <input type="text" className="form-control" name="nomor_surat" value={formData.nomor_surat} onChange={handleChange} placeholder="Otomatis di-generate jika kosong"/>
             </div>
             
             <div className="form-group">

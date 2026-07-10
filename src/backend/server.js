@@ -128,9 +128,10 @@ app.get('/api/spt', async (req, res) => {
 });
 
 // Membuat SPT baru beserta pegawainya
+// Cipta (Create) SPT baru beserta pegawainya
 app.post('/api/spt', async (req, res) => {
   const {
-    tahun,
+    nomor_surat, // Tangkap input nomor surat dari form (bisa kosong)
     tanggal_surat,
     dasar_penugasan,
     tujuan_tugas,
@@ -142,24 +143,50 @@ app.post('/api/spt', async (req, res) => {
     penandatangan_nip,
     penandatangan_pangkat_gol,
     penandatangan_jabatan,
-    pegawai_ids // Array berisi ID pegawai dari frontend (contoh: [1, 2, 3])
+    pegawai_ids
   } = req.body;
 
   const connection = await pool.getConnection();
 
   try {
-    // Mulai Transaksi Database (Database Transaction)
     await connection.beginTransaction();
 
-    // 1. Generate no_urut secara otomatis berdasarkan tahun berjalan
-    const [urutRows] = await connection.query(
-      'SELECT IFNULL(MAX(no_urut), 0) + 1 AS next_urut FROM spt WHERE tahun = ?',
-      [tahun]
-    );
-    const no_urut = urutRows[0].next_urut;
-    const nomor_surat_full = `000.1.2.3/${no_urut}/438.5.12/${tahun}`;
+    // 1. Ekstrak Tahun dari tanggal_surat (format YYYY-MM-DD)
+    const tahun = tanggal_surat.substring(0, 4);
+    
+    let finalNomorSurat = nomor_surat;
+    let no_urut = 0;
 
-    // 2. Masukkan data ke tabel utama `spt`
+    // 2. LOGIKA PENENTUAN NOMOR SURAT
+    if (!finalNomorSurat || finalNomorSurat.trim() === '') {
+      // JIKA KOSONG: Generate no_urut otomatis
+      const [urutRows] = await connection.query(
+        'SELECT IFNULL(MAX(no_urut), 0) + 1 AS next_urut FROM spt WHERE tahun = ?',
+        [tahun]
+      );
+      no_urut = urutRows[0].next_urut;
+      finalNomorSurat = `000.1.2.3/${no_urut}/438.5.12/${tahun}`;
+    } else {
+      // JIKA DIISI MANUAL: Cek apakah nomor tersebut sudah dipakai di database
+      const [existing] = await connection.query(
+        'SELECT * FROM spt WHERE nomor_surat_full = ?', 
+        [finalNomorSurat]
+      );
+      
+      if (existing.length > 0) {
+        // Jika duplikat, BATALKAN transaksi dan kirim pesan error ke React!
+        await connection.rollback();
+        return res.status(400).json({ error: 'Nomor surat sudah ada! Silakan ganti atau kosongkan agar dibuat otomatis.' });
+      }
+
+      // Opsional: Coba ambil angka urutan jika formatnya standar (contoh: .../123/...)
+      const parts = finalNomorSurat.split('/');
+      if (parts.length > 1 && !isNaN(parts[1])) {
+        no_urut = parseInt(parts[1]);
+      }
+    }
+
+    // 3. Masukkan data ke tabel utama `spt` (Gunakan finalNomorSurat)
     const insertSptQuery = `
       INSERT INTO spt (
         no_urut, tahun, nomor_surat_full, tanggal_surat, dasar_penugasan, 
@@ -169,14 +196,14 @@ app.post('/api/spt', async (req, res) => {
     `;
     
     const [sptResult] = await connection.query(insertSptQuery, [
-      no_urut, tahun, nomor_surat_full, tanggal_surat, dasar_penugasan,
-      tujuan_tugas, tanggal_mulai, tanggal_selesai, tempat_tugas, kendaraan,
+      no_urut, tahun, finalNomorSurat, tanggal_surat, dasar_penugasan,
+      tujuan_tugas, tanggal_mulai, tanggal_selesai, tempat_tugas, kendaraan, // pastikan kolom ini ada di form kamu atau beri default string kosong
       penandatangan_nama, penandatangan_nip, penandatangan_pangkat_gol, penandatangan_jabatan
     ]);
 
     const newSptId = sptResult.insertId;
 
-    // 3. Masukkan data relasi ke tabel pivot `spt_pegawai`
+    // 4. Masukkan data relasi ke tabel pivot `spt_pegawai`
     if (pegawai_ids && pegawai_ids.length > 0) {
       const pivotData = pegawai_ids.map(pegawai_id => [newSptId, pegawai_id]);
       await connection.query(
@@ -185,16 +212,14 @@ app.post('/api/spt', async (req, res) => {
       );
     }
 
-    // Konfirmasi transaksi berhasil disimpan permanen (Commit)
+    // Konfirmasi transaksi
     await connection.commit();
-    res.json({ message: 'SPT Berhasil Disimpan!', spt_id: newSptId, nomor_surat_full });
+    res.json({ message: 'SPT Berhasil Disimpan!', spt_id: newSptId, nomor_surat_full: finalNomorSurat });
 
   } catch (error) {
-    // Batalkan seluruh transaksi jika terjadi error di tengah jalan (Rollback)
     await connection.rollback();
     res.status(500).json({ error: error.message });
   } finally {
-    // Lepaskan koneksi kembali ke pool
     connection.release();
   }
 });
