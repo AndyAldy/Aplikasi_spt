@@ -72,7 +72,7 @@ try {
       navigate('/');
     } catch (error) {
       // INI YANG AKAN MEMUNCULKAN PESAN "NOMOR SURAT SUDAH ADA" DARI BACKEND
-      alert(error.response?.data?.error || "Terjadi kesalahan saat menyimpan data");
+      alert(error.response?.data?.error || "Data sudah ada");
     }
   };
 
