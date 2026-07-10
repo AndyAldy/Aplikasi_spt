@@ -1,6 +1,7 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
 import cors from 'cors';
+import bcrypt from 'bcryptjs';
 
 const app = express();
 app.use(cors());
@@ -26,6 +27,63 @@ pool.getConnection()
   .catch(err => {
     console.error('Error koneksi database:', err);
   });
+
+// ==========================================
+// API UNTUK AUTENTIKASI (LOGIN & REGISTER)
+// ==========================================
+
+// 1. REGISTER
+app.post('/api/register', async (req, res) => {
+  const { nama_lengkap, username, password } = req.body;
+  try {
+    // Cek apakah username sudah dipakai
+    const [existing] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'Username sudah digunakan!' });
+    }
+
+    // Enkripsi (Hash) password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Simpan ke database
+    await pool.query(
+      'INSERT INTO users (nama_lengkap, username, password) VALUES (?, ?, ?)',
+      [nama_lengkap, username, hashedPassword]
+    );
+
+    res.json({ message: 'Registrasi berhasil! Silakan login.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. LOGIN
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    // Cari user berdasarkan username
+    const [users] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Username tidak ditemukan!' });
+    }
+
+    const user = users[0];
+    
+    // Bandingkan password input dengan password di database
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Password salah!' });
+    }
+
+    // Jika berhasil, kirim data user (tanpa password) ke frontend
+    res.json({ 
+      message: 'Login berhasil!', 
+      user: { id: user.id, nama_lengkap: user.nama_lengkap, username: user.username } 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ==========================================
 // API UNTUK PEGAWAI (MASTER DATA)
