@@ -1,22 +1,55 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+/* eslint-disable no-unused-vars */
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import SptList from './pages/SptList';
 import SptForm from './pages/SptForm';
 import SptPrint from './pages/SptPrint';
-import './App.css';
+
+// Import halaman Auth yang baru kita buat
+import Login from './pages/Login';
+import Register from './pages/Register';
+
+// Fungsi untuk mengecek apakah user sudah login
+const ProtectedRoute = ({ children }) => {
+  const user = localStorage.getItem('user');
+  if (!user) {
+    return <Navigate to="/login" replace />; // Tendang ke /login
+  }
+  return (
+    <>
+      <Navbar /> {/* Navbar hanya muncul jika sudah login */}
+      <div style={{ padding: '20px' }}>
+        {children}
+      </div>
+    </>
+  );
+};
 
 function App() {
   return (
     <Router>
-      <Navbar />
-      <div style={{ padding: '20px' }}>
-        <Routes>
-          <Route path="/" element={<SptList />} />
-          <Route path="/create" element={<SptForm />} />
-          <Route path="/edit/:id" element={<SptForm />} />
-          <Route path="/print/:id" element={<SptPrint />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Rute Privat (Wajib Login) */}
+        <Route path="/" element={
+          <ProtectedRoute><SptList /></ProtectedRoute>
+        } />
+        
+        <Route path="/create" element={
+          <ProtectedRoute><SptForm /></ProtectedRoute>
+        } />
+        
+        <Route path="/edit/:id" element={
+          <ProtectedRoute><SptForm /></ProtectedRoute>
+        } />
+        
+        <Route path="/print/:id" element={
+          <ProtectedRoute><SptPrint /></ProtectedRoute>
+        } />
+      </Routes>
     </Router>
   );
 }
