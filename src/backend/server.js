@@ -29,6 +29,67 @@ pool.getConnection()
   });
 
 // ==========================================
+// API UNTUK MENGAMBIL 1 DATA (UNTUK FORM EDIT)
+// ==========================================
+app.get('/api/spt/:id', async (req, res) => {
+  try {
+    const [sptRows] = await pool.query('SELECT * FROM spt WHERE id = ?', [req.params.id]);
+    
+    if (sptRows.length === 0) {
+      return res.status(404).json({ error: 'Data tidak ditemukan' });
+    }
+
+    // (Opsional) Mengambil data pegawai jika sebelumnya kamu sudah menyimpan relasinya
+    const [pegawaiRows] = await pool.query(`
+      SELECT p.nama, p.nip, p.pangkat_gol AS pangkat, p.jabatan 
+      FROM pegawai p
+      JOIN spt_pegawai sp ON p.id = sp.pegawai_id
+      WHERE sp.spt_id = ?
+    `, [req.params.id]);
+
+    res.json({
+      spt: sptRows[0],
+      // Jika pegawai kosong, berikan 1 baris kosong agar form tidak error
+      pegawai: pegawaiRows.length > 0 ? pegawaiRows : [{ nama: '', nip: '', pangkat: '', jabatan: '' }] 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// API UNTUK MENYIMPAN PERUBAHAN (UPDATE/PUT)
+// ==========================================
+app.put('/api/spt/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    nomor_surat, tanggal_surat, dasar_penugasan, tujuan_tugas,
+    tanggal_mulai, tanggal_selesai, tempat_tugas, kendaraan,
+    penandatangan_nama, penandatangan_nip, penandatangan_pangkat_gol, penandatangan_jabatan
+  } = req.body;
+
+  try {
+    // Update data di tabel SPT
+    await pool.query(`
+      UPDATE spt SET 
+        nomor_surat_full = ?, tanggal_surat = ?, dasar_penugasan = ?, tujuan_tugas = ?,
+        tanggal_mulai = ?, tanggal_selesai = ?, tempat_tugas = ?, kendaraan = ?,
+        penandatangan_nama = ?, penandatangan_nip = ?, penandatangan_pangkat_gol = ?, penandatangan_jabatan = ?
+      WHERE id = ?
+    `, [
+      nomor_surat, tanggal_surat, dasar_penugasan, tujuan_tugas,
+      tanggal_mulai, tanggal_selesai, tempat_tugas, kendaraan,
+      penandatangan_nama, penandatangan_nip, penandatangan_pangkat_gol, penandatangan_jabatan,
+      id
+    ]);
+
+    res.json({ message: 'Data SPT berhasil diperbarui!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
 // API UNTUK AUTENTIKASI (LOGIN & REGISTER)
 // ==========================================
 

@@ -25,6 +25,43 @@ export default function SptForm() {
   const [pegawaiTugas, setPegawaiTugas] = useState([
     { nama: '', nip: '', pangkat: '', jabatan: '' }
   ]);
+  useEffect(() => {
+    const fetchSptDetail = async () => {
+      if (id) {
+        try {
+          const response = await axios.get(`http://localhost:8000/api/spt/${id}`);
+          const data = response.data.spt;
+          const dataPegawai = response.data.pegawai;
+
+          const formatTgl = (tgl) => tgl ? tgl.split('T')[0] : '';
+
+          setFormData({
+            nomor_surat: data.nomor_surat_full || '',
+            tanggal_surat: formatTgl(data.tanggal_surat),
+            dasar_penugasan: data.dasar_penugasan || '',
+            tujuan_tugas: data.tujuan_tugas || '',
+            tempat_tugas: data.tempat_tugas || '',
+            tanggal_mulai: formatTgl(data.tanggal_mulai),
+            tanggal_selesai: formatTgl(data.tanggal_selesai),
+            kendaraan: data.kendaraan || 'Kendaraan Dinas',
+            penandatangan_nama: data.penandatangan_nama || '',
+            penandatangan_nip: data.penandatangan_nip || '',
+            penandatangan_pangkat_gol: data.penandatangan_pangkat_gol || '',
+            penandatangan_jabatan: data.penandatangan_jabatan || ''
+          });
+
+          setPegawaiTugas(dataPegawai);
+
+        } catch (error) {
+          console.error("Gagal mengambil data:", error);
+          alert("Gagal memuat data dari database!");
+        }
+      }
+    };
+
+    fetchSptDetail();
+  }, [id]);
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,19 +81,33 @@ export default function SptForm() {
     setPegawaiTugas(pegawaiTugas.filter((_, i) => i !== index));
   };
 
+
+  // =================================================================
+  // 2. BAGIAN YANG DIUBAH: Handle Submit agar bisa POST dan PUT
+  // =================================================================
   const handleSubmit = async (e) => {
     e.preventDefault();
     const payloadData = { ...formData, pegawai: pegawaiTugas };
-    console.log("Data siap dikirim:", payloadData);
-try {
-      const response = await axios.post('http://localhost:8000/api/spt', payloadData);
-      alert(response.data.message);
+    
+    try {
+      let response;
+      
+      if (id) {
+        // Jika ada ID (Edit Data) -> panggil PUT
+        response = await axios.put(`http://localhost:8000/api/spt/${id}`, payloadData);
+      } else {
+        // Jika tidak ada ID (Buat Baru) -> panggil POST
+        response = await axios.post('http://localhost:8000/api/spt', payloadData);
+      }
+      
+      alert(response.data.message || 'Data Berhasil Disimpan!');
       navigate('/');
     } catch (error) {
-      // INI YANG AKAN MEMUNCULKAN PESAN "NOMOR SURAT SUDAH ADA" DARI BACKEND
-      alert(error.response?.data?.error || "Data sudah ada");
+      alert(error.response?.data?.error || "Terjadi kesalahan saat menyimpan data");
     }
   };
+  // =================================================================
+
 
   return (
     <div className="container">
@@ -106,7 +157,7 @@ try {
             </button>
           </div>
 
-<h3 className="section-title" style={{ marginTop: '35px' }}>Detail Penugasan</h3>
+          <h3 className="section-title" style={{ marginTop: '35px' }}>Detail Penugasan</h3>
           <div className="form-grid">
             <div className="form-group">
               <label>Tujuan Tugas</label>
@@ -118,7 +169,6 @@ try {
               <input type="text" className="form-control" name="tempat_tugas" value={formData.tempat_tugas} onChange={handleChange} placeholder="Contoh: Kecamatan Sidoarjo" required />
             </div>
 
-            {/* TAMBAHKAN DUA KOTAK INPUT INI */}
             <div className="form-group">
               <label>Tanggal Mulai</label>
               <input type="date" className="form-control" name="tanggal_mulai" value={formData.tanggal_mulai} onChange={handleChange} required />
